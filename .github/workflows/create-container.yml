@@ -1,0 +1,33 @@
+name: Convert Container to WASM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  convert-to-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install container2wasm
+        run: |
+          wget https://github.com/container2wasm/container2wasm/releases/download/v0.8.2/container2wasm-v0.8.2-linux-amd64.tar.gz
+          sudo tar -xvzf container2wasm* -C /usr/local/bin/
+
+      - name: Convert container to WASM
+        run: |
+          export COMPOSE_PARALLEL_LIMIT=1 # To avoid large amounts of concurrent file space needed
+          c2w registry.gitlab.com/islandoftex/images/texlive:latest texlive.wasm
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: texlive-wasm
+          path: texlive.wasm
